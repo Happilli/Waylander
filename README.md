@@ -1,5 +1,10 @@
-# TUI application for typing
+# TUI Application for Typing [WayLander]
 
-<samp> added so far </samp>
-- created a frontend skeleto.
-![waylander](assets/waylander.png)
+## Features Added So Far
+- Created a frontend skeleton
+
+## Preview
+
+| Screenshot                          |
+|-------------------------------------|
+| ![WayLander](assets/waylander.png)  |
