@@ -5,9 +5,17 @@ from rich import box
 from rich.text import Text
 from rich.align import Align
 from rich.live import Live
-from time import sleep
+import msvcrt #-> this in window specific 
 
-def create_ui():
+def get_key():
+    if msvcrt.kbhit():
+        try:
+           return msvcrt.getch().decode("utf-8")
+        except UnicodeDecodeError:
+            return None
+    return None
+
+def create_ui(input_text=""):
     layout = Layout()
 
     #splittiing 
@@ -42,10 +50,10 @@ def create_ui():
         )
     )
     #Main split two
-    input_placholder = Text("type here...", style="yellow")
+    input_content = Text(input_text if input_text else "tye here...", style="yellow" if not input_text else "white")
     layout["input_panel"].update(
         Panel(
-          Align.left(input_placholder),
+          Align.left(input_content),
             border_style="bright_green",
             box=box.ROUNDED,
         )
@@ -56,11 +64,27 @@ def create_ui():
 #run after everything loaded only.. with live
 if __name__ == "__main__":
     console = Console()
-    design = create_ui()
+    current_input=""
+    design = create_ui(current_input)
 
-    with Live(design, refresh_per_second=4, screen=True) as live:
+
+    with Live(design, refresh_per_second=120, screen=True) as live:
         try:
             while True:
-                sleep(0.1)
+                key = get_key()
+                if not key:
+                    continue
+                
+                ## handilng main keystrokes
+                if key == "\x03":
+                     raise KeyboardInterrupt
+                elif key == "\x08": #for linux dev need to update it accordingly....
+                    current_input = current_input[:-1]
+                elif key == "\r":
+                    pass
+                elif key and key.isprintable():
+                    current_input += key
+
+                live.update(create_ui(current_input))  
         except KeyboardInterrupt:
             pass        
