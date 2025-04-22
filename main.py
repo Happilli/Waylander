@@ -17,9 +17,22 @@ class WayLander:
         self.caret_visible = True
         self.caret_timer = 0
         self.sample_text = """It is not hard to make money in the market. What is hard to avoid is the alluring temptations to throw your money away on short, get-rich-quick speculative binges. TIt is an obivious lesson, but one frequently ignored."""
+        self.words = self.sample_text.split()
+        self.current_word_idx = 0
+        self.word_positions = self.compute_word_positions()
         self.design = self.create_ui(self.current_input)
         
-    
+    #this precomputes the index of each word.[more easy way]
+    def compute_word_positions(self):
+        positions = []
+        idx = 0
+        for word in self.words:
+            idx = self.sample_text.find(word, idx)
+            positions.append(idx)
+            idx += len(word)
+        return positions
+
+
     def get_key(self):
         if msvcrt.kbhit():
             try:
@@ -43,14 +56,26 @@ class WayLander:
         layout.split(
             Layout(self._top_panel,name="top", ratio=1),
             Layout(name="main", ratio=9),
-        )   
+        )
+
+        curent_word = self.words[self.current_word_idx]
+        word_start = self.word_positions[self.current_word_idx]
+
+
+        sample_display = Text()
+        completed_text = self.sample_text[:word_start] 
+        sample_display.append(Text(completed_text, style="green"))  
 
         # highlighted text with the caret 
-        sample_display = Text()
         input_chars = list(input_text)
-        sample_chars = list(self.sample_text)
+        word_chars = list(curent_word)
 
-        for i, char in enumerate(sample_chars):
+        # caret placing individualactive 
+        for i, char in enumerate(word_chars):
+            if self.caret_visible and i == len(input_chars):
+                sample_display.append(Text("_", style="bold green"))
+
+
             if i<len(input_chars):
                 if char == input_chars[i]:
                     sample_display.append(Text(char, style="bold green"))
@@ -60,26 +85,10 @@ class WayLander:
                 sample_display.append(Text(char, style="white"))     
         
 
-        #positioning the caret
-        if self.caret_visible and len(input_text) < len(sample_chars):
-            caret_pos = len(input_text)
-            new_display = Text()
-            for i, char in enumerate(sample_chars):
-                if  i == caret_pos:
-                    new_display.append(Text("|", style="bold green"))
-                if i<len(input_chars):
-                    if char == input_chars[i]:
-                        new_display.append(Text(char, style="bold green"))
-                    else:
-                        new_display.append(Text(char, style="bold red"))
-                else:
-                    new_display.append(Text(char, style="white"))   
-
-            
-
-            sample_display = new_display    
-
-
+        remaining_text_start = word_start+ len(curent_word)
+        remaining_text = self.sample_text[remaining_text_start:]
+        sample_display.append(Text(remaining_text, style="dim"))
+    
         input_content = Text(input_text if input_text else "type here...", style="yellow" if not input_text else "white")
         
         #main 
@@ -119,8 +128,12 @@ class WayLander:
                             raise KeyboardInterrupt
                         elif key == "\x08": #for linux dev need to update it accordingly....
                             self.current_input = self.current_input[:-1]
-                        elif key == "\r":
-                            pass
+                        elif key == " " and self.current_word_idx <len(self.words)-1:
+                            current_word = self.words[self.current_word_idx]
+                            if self.current_input == current_word:
+                                self.current_word_idx += 1
+                                self.current_input = ""                        
+                        
                         elif key and key.isprintable():
                             self.current_input += key
                      
