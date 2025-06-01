@@ -12,6 +12,7 @@ import sys
 class WayLander:
     def __init__(self):
         self.console = Console()
+        self.start_typing = False
         self.current_input = ""
         self.last_update  = 0
         self.caret_visible = True
@@ -88,9 +89,13 @@ class WayLander:
         remaining_text_start = word_start+ len(curent_word)
         remaining_text = self.sample_text[remaining_text_start:]
         sample_display.append(Text(remaining_text, style="dim"))
-    
-        input_content = Text(input_text if input_text else "type here...", style="yellow" if not input_text else "white")
-        
+
+
+        if not self.start_typing:
+            input_content = Text("type here...", style="yellow")
+        else:
+            input_content =Text(self.current_input, style="white")
+
         #main 
         mpx = layout["main"]
         mpx.split(
@@ -135,6 +140,8 @@ class WayLander:
                                 self.current_input = ""                        
                         
                         elif key and key.isprintable():
+                            if not self.start_typing:
+                                self.start_typing = True
                             self.current_input += key
                      
                         now = time.time()
