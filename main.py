@@ -22,6 +22,9 @@ class WayLander:
         self.current_word_idx = 0
         self.word_positions = self.compute_word_positions()
         self.design = self.create_ui(self.current_input)
+        self.wpm = 0
+        self.correct_words_typed = 0
+        self.start_time = None
         
     #this precomputes the index of each word.[more easy way]
     def compute_word_positions(self):
@@ -122,7 +125,25 @@ class WayLander:
              )
         )
         return layout     
+    
 
+    ## replacer menu after completion
+    def final_screen(self):
+        final_panel = Panel(
+            Align.center(
+                f"[bold magenta]WPM: [green]{self.wpm:.2f}[/green][/bold magenta]",
+                vertical="middle",
+            ),
+            title="RESULT",
+            title_align="center",
+            border_style="bright_magenta",
+            box = box.HEAVY,
+            padding=(3,10)
+        )
+        layout = Layout()
+        layout.split(Layout(final_panel, name="result", ratio=1))
+        return layout
+    
     def run(self):
         with Live(self.design, refresh_per_second=120, screen=True) as live:
             try:
@@ -133,27 +154,51 @@ class WayLander:
                             raise KeyboardInterrupt
                         elif key == "\x08": #for linux dev need to update it accordingly....
                             self.current_input = self.current_input[:-1]
-                        elif key == " " and self.current_word_idx <len(self.words)-1:
+                        elif key == " ":
                             current_word = self.words[self.current_word_idx]
                             if self.current_input == current_word:
-                                self.current_word_idx += 1
-                                self.current_input = ""                        
-                        
-                        elif key and key.isprintable():
+                                self.correct_words_typed +=1
+
+                                if self.start_time is None:
+                                    self.start_time = time.time()
+                                else:
+                                    elapsed_min = (time.time()-self.start_time)/60
+                                    if elapsed_min >0:
+                                        self.wpm = self.correct_words_typed / elapsed_min
+
+                                self.current_word_idx+=1
+                                self.current_input =""
+
+
+                                if self.current_word_idx >= len(self.words):
+                                    live.update(self.final_screen())
+                                    while True:
+                                        if msvcrt.kbhit():
+                                            break
+                                        time.sleep(0.1)
+                                    self.console.print("\nExiting")
+                                    sys.exit(0)
+                              
+                        elif key.isprintable():
                             if not self.start_typing:
                                 self.start_typing = True
-                            self.current_input += key
-                     
-                        now = time.time()
-                        if now - self.last_update > 0.016: #60 fps
-                            live.update(self.create_ui(self.current_input))
-                            self.last_update = now
+                            self.current_input +=key
 
-                    time.sleep(0.016)       
+                    now = time.time()
+                    if now - self.last_update > 0.016:
+                        live.update(self.create_ui(self.current_input))
+                        self.last_update = now
+
+                    time.sleep(0.016)
             except KeyboardInterrupt:
-                self.console.print("\nExiting...")
-                sys.exit(0) 
+                self.console.print("\n Exiting___")
+                sys.exit(0)           
+                
+               
 
+
+    
+                              
   
                     
 
